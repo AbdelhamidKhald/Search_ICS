@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <title>نتائج السايبر سكيورتي</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f2f5;
+            direction: rtl;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1a73e8;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+        .search-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        .search-box {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+        .search-box:focus {
+            border-color: #1a73e8;
+            box-shadow: 0 0 0 3px rgba(26,115,232,0.2);
+            outline: none;
+        }
+        .filter-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .filter-btn {
+            padding: 10px 20px;
+            margin: 0 5px;
+            border: none;
+            border-radius: 8px;
+            background-color: #f1f3f4;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .filter-btn.active {
+            background-color: #1a73e8;
+            color: white;
+        }
+        .result {
+            padding: 15px;
+            margin: 10px 0;
+            background-color: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .result:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .grade {
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .grade.fail {
+            background-color: #fce8e6;
+            color: #c5221f;
+        }
+        .grade.conditional {
+            background-color: #fef7e0;
+            color: #b06000;
+        }
+        .grade.pass {
+            background-color: #e6f4ea;
+            color: #137333;
+        }
+        .grade.pass-p-up-to-m {
+            background-color: #ffefc0;
+            color: #b8860b;
+        }
+        .highlight {
+            background-color: #e8f0fe;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        .count {
+            text-align: center;
+            margin: 20px 0;
+            color: #5f6368;
+        }
+        .footer {
+            text-align: center;
+            font-size: 0.9em;
+            color: #a1a1a1;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>نتائج السايبر سكيورتي</h1>
+        <div class="search-container">
+            <input type="text" 
+                   id="searchInput" 
+                   class="search-box" 
+                   placeholder="ابحث عن اسم الطالب..."
+                   autocomplete="off">
+        </div>
+        <div class="filter-container">
+            <button class="filter-btn active" data-filter="all">الكل</button>
+            <button class="filter-btn" data-filter="pass">ناجح</button>
+            <button class="filter-btn" data-filter="conditional">مشروط</button>
+            <button class="filter-btn" data-filter="fail">راسب</button>
+        </div>
+        <div id="results"></div>
+        <div id="count" class="count"></div>
+    </div>
+    <div class="footer">Created by Abdelhamid Khald</div>
+
+    <script>
+        const students = [
+            { name: "أبانوب ناصر إسكندر جورجي", grade: "NA" },
+            { name: "إبراهيم السعيد رمضان محمود", grade: "P up to M" },
+            { name: "إبراهيم رسلان البدري إبراهيم", grade: "NA" },
+            { name: "إبراهيم ماهر إبراهيم العدوي مصطفى", grade: "P up to M" },
+            { name: "محمد إبراهيم عبد الجواد إبراهيم", grade: "P not up to M" },
+            { name: "محمد أبو العز سعد زغلول أبو المعاطي", grade: "P not up to M" },
+            { name: "أحمد توبة لطب محمود", grade: "NA" },
+            { name: "محمد جمال محمد محي الدين محمد", grade: "P up to M" },
+            { name: "أحمد حاتم سعيد حلمي محمود", grade: "NA" },
+            { name: "محمد حسن عبد الخالق مسعود أحمد", grade: "P not up to M" },
+            { name: "محمد سيد أحمد السيد", grade: "P up to M" },
+            { name: "محمد سيد عبده محمد إبراهيم", grade: "P up to M" },
+            { name: "أحمد سيد فرج سيد إبراهيم", grade: "NA" },
+            { name: "أحمد صلاح الدين عبد الحميد عبد الخالق", grade: "NA" },
+            { name: "محمد علي أحمد علي عثمان", grade: "P up to M" },
+            { name: "محمد علي جاد علي محمد", grade: "P up to M" },
+            { name: "محمد عويس لرني عبد الهادي", grade: "P up to M" },
+            { name: "محمد محمد أحمد محارب رضوان", grade: "P up to M" },
+            { name: "محمد محمد أحمد محمد عامر", grade: "P not up to M" },
+            { name: "محمد محمد حسن محمد", grade: "P not up to M" },
+            { name: "أحمد محمد سيد علي محمد", grade: "NA" },
+            { name: "أحمد محمد عبد ربه أحمد", grade: "NA" },
+            { name: "محمد محمد محمود عبد الرحمن محمود", grade: "P up to M" },
+            { name: "أحمد محمد ياقوت محمد", grade: "NA" },
+            { name: "أحمد نبيل أحمد السيد كاشف", grade: "NA" },
+            { name: "محمد وليد محمد السيد محمد", grade: "P up to M" },
+            { name: "آدهم أحمد شولي محمد", grade: "P up to M" },
+            { name: "آدهم خلف بشاي رياض", grade: "NA" },
+            { name: "آدم عبد السميع محمود علي", grade: "P up to M" },
+            { name: "آدم محمود عبده السيد أمين النمنم", grade: "NA" },
+            { name: "إسراء محمد أحمد محمد", grade: "P up to M" },
+            { name: "إسراء مشهور أحمد عبد المحسن", grade: "NA" },
+            { name: "إسلام شريف عبد المنعم محمد", grade: "NA" },
+            { name: "إسلام محمد سيد محمد حسنين", grade: "NA" },
+            { name: "أسماء علي سعدي", grade: "NA" },
+            { name: "أشرف إبراهيم محمد إبراهيم", grade: "P not up to M" },
+            { name: "آلاء إبراهيم الدسولي نصر منصور", grade: "P up to M" },
+            { name: "آلاء إسماعيل محمد سامي إسماعيل عمر", grade: "P up to M" },
+            { name: "آلاء حسن محمد محمد شحاتة", grade: "P not up to M" },
+            { name: "آلاء شريف عطية مدكور", grade: "P up to M" },
+            { name: "السيد أحمد السيد محمود", grade: "P up to M" },
+            { name: "أمل منير فوزي عزمي زخاري", grade: "P up to M" },
+            { name: "أمير خالد عبد الرحيم أمير", grade: "P up to M" },
+            { name: "أمير طلعت السيد محمد زكي بركات", grade: "P up to M" },
+            { name: "أمير مسعد جودة سلامة حسن", grade: "P up to M" },
+            { name: "أنجي أشرف حسن محمد", grade: "P up to M" },
+            { name: "أنس محمد حنفي محمد حسن", grade: "NA" },
+            { name: "إياد أحمد علي جعفر", grade: "P up to M" },
+            { name: "إيمي سعيد رياض سعيد يوسف", grade: "P up to M" },
+            { name: "إيناس عبد القادر متولي عبد التواب", grade: "P up to M" },
+            { name: "أحمد صبري السعيد أحمد هلال", grade: "NA" },
+            { name: "آدهم عماد محمد حلمي عبد الحميد", grade: "P up to M" },
+            { name: "بسملة مجدي أحمد فتحي إبراهيم العسال", grade: "P up to M" },
+            { name: "بسملة عمرو محمد عيد", grade: "P up to M" },
+            { name: "بسملة محمد أحمد", grade: "P not up to M" },
+            { name: "بدر رضا محمد سعيد", grade: "NA" },
+            { name: "بلال وليد محمد العماد", grade: "NA" },
+            { name: "بشوي جمال ميخائيل جرجس", grade: "NA" },
+            { name: "تغريد عزت السنوسي أبو العنين الجوهري", grade: "NA" },
+            { name: "تمى حسام السيد عبد الغني الأشهب", grade: "P up to M" },
+            { name: "تمى خالد حجازي سيد محمد", grade: "P up to M" },
+            { name: "جاسر أحمد عبد القادر محمد سالم", grade: "P up to M" },
+            { name: "جمال محمد أنور محمد العشيري", grade: "P not up to M" },
+            { name: "جنى أحمد صلاح أحمد", grade: "P up to M" },
+            { name: "جنة حسام علي محمد", grade: "P up to M" },
+            { name: "جنى محمد سعيد محمد", grade: "P up to M" },
+            { name: "حازم محمد إبراهيم الشحات", grade: "NA" },
+            { name: "حازم محمود عبد الحليم بحر", grade: "NA" },
+            { name: "حازم حمادة عبد اللطيف حمادة", grade: "P up to M" },
+            { name: "حبيبة مصطفى الشمندى", grade: "NA" },
+            { name: "حبيبة أحمد عبد اللطيف مبرون", grade: "NA" },
+            { name: "حبيبة محمد عبد الله إبراهيم", grade: "P up to M" },
+            { name: "حبيبة محمد مصطفى كمال حسن", grade: "P up to M" },
+            { name: "حسام أحمد عبد الفتاح إبراهيم محمد", grade: "NA" },
+            { name: "حسام محمد علي عثمان محمد", grade: "NA" },
+            { name: "حسن سامح حسن عبد المجيد", grade: "P not up to M" },
+            { name: "حسن أحمد أمين حسن فرغلي", grade: "NA" },
+            { name: "حسن محمود كامل السعيد", grade: "P up to M" },
+            { name: "حسين محمد حسين محمود", grade: "NA" },
+            { name: "حسين محمد عطا أحمد خليفة", grade: "NA" },
+            { name: "حسين محمود حسين محمود مسعود", grade: "NA" },
+            { name: "حمزة عمرو عز الرجال وهبة", grade: "P up to M" },
+            { name: "خالد عمرو محمد سلامة خليفة", grade: "NA" },
+            { name: "خالد إبراهيم حسن علي حجاج", grade: "P up to M" },
+            { name: "خلود أسامة محمد عباس هلال متولي", grade: "NA" },
+            { name: "داليا أحمد علي محمد", grade: "P up to M" },
+            { name: "داليا حسن رشدي أحمد عبد الواحد", grade: "NA" },
+            { name: "دانيال مراد ثابت أبو الدهب مسعد", grade: "P up to M" },
+            { name: "دعاء ممدوح أحمد رسلان حسين", grade: "NA" },
+            { name: "دنيا خالد عبد الرحمن السيد مصطفى", grade: "P up to M" },
+            { name: "دنيا عبد الهادي محمود الجزار", grade: "NA" },
+            { name: "دميانه سامي معوض", grade: "NA" },
+            { name: "رانيا سامي السيد محمد سعيد", grade: "NA" },
+            { name: "ربيع عماد ربيع أنور", grade: "NA" },
+            { name: "ربيع كريم ربيع عبد الكريم", grade: "NA" },
+            { name: "رحمة علي الشنوف", grade: "P up to M" },
+            { name: "رضوى ممدوح جمعة أحمد عيد", grade: "P not up to M" },
+            { name: "رضوى سالم محمد", grade: "P up to M" },
+            { name: "روان أشرف محمد صادق محمد", grade: "NA" },
+            { name: "روان عبد الباسط السيد عبد اللطيف", grade: "P not up to M" },
+            { name: "روفيدا شامل رافع حامد عبد العزيز", grade: "NA" },
+            { name: "رويدة محمد عبد العليم محمد", grade: "NA" },
+            { name: "رؤى هشام فتحي مصطفى محمد", grade: "P up to M" },
+            { name: "ريم أحمد درويش", grade: "P up to M" },
+            { name: "روميساء سمير مصطفى محمد", grade: "NA" },
+            { name: "زياد أحمد سعد علي علي", grade: "P not up to M" },
+            { name: "زياد أحمد عاطف حامد", grade: "P up to M" },
+            { name: "زياد حمدي عبد العزيز أحمد محمد عثمان", grade: "P up to M" },
+            { name: "زياد سامح عبد الهادي سيد عبد الهادي", grade: "NA" },
+            { name: "زياد سليمان صلاح معوض سليمان", grade: "P not up to M" },
+            { name: "زياد صوفي ربيع محمد السيد", grade: "P up to M" },
+            { name: "زياد عماد جابر كامل عبد التواب", grade: "P up to M" },
+            { name: "زياد فريد شولي خليفة خليل", grade: "P up to M" },
+            { name: "زياد نادر محمد السيد عثمان", grade: "P up to M" },
+            { name: "زياد هيمن صابر محمد يونس", grade: "P up to M" },
+            { name: "زينب حسين إبراهيم مصطفى", grade: "P up to M" },
+            { name: "سالم رمضان حسين مصطفى محمود", grade: "P up to M" },
+            { name: "سالي محمد محسن محمد أمين", grade: "P up to M" },
+            { name: "سامح محمد إبراهيم حسن", grade: "P up to M" },
+            { name: "ساندي رضا فايز رزق عياد", grade: "NA" },
+            { name: "سارة محمد سيد عيد عثمان", grade: "NA" },
+            { name: "ستيفن سامح بشري بدري", grade: "P not up to M" },
+            { name: "سفيان وائل محمد أحمد", grade: "NA" },
+            { name: "سلمى ناجي عبد المطلب أحمد ضلام", grade: "NA" },
+            { name: "سلمى سيد سيد إمام", grade: "NA" },
+            { name: "سليمان عماد سليمان شافعي هزاع", grade: "NA" },
+            { name: "سليمان عاطف سليمان", grade: "NA" },
+            { name: "سما أمير كمال إبراهيم عبد الرسول", grade: "NA" },
+            { name: "سما حاتم حسن علي محمد", grade: "P up to M" },
+            { name: "سما رضا أحمد", grade: "P not up to M" },
+            { name: "سمية أحمد عبد العزيز إسماعيل", grade: "P not up to M" },
+            { name: "سندس مجدي أحمد مصطفى علي", grade: "NA" },
+            { name: "سهيل السعيد بدير عمر الأخضر", grade: "P up to M" },
+            { name: "سهيلة مصطفى محمد مصطفى العشماوي", grade: "P up to M" },
+            { name: "سهيلة السعيد محمود عبد السلام", grade: "NA" },
+            { name: "سيد أشرف سيد عبد السلام الوكيل", grade: "P up to M" },
+            { name: "سيف أمجد وحيد خليل", grade: "P up to M" },
+            { name: "سيد إبراهيم سيد أحمد", grade: "P up to M" },
+            { name: "سيف أحمد عبد الغني محمد", grade: "NA" },
+            { name: "سيف أحمد محمد منصور", grade: "P not up to M" },
+            { name: "سيف أشرف عبد العزيز محمد فهمي", grade: "P not up to M" },
+            { name: "سيف الله غريب محمد محمد أبو زيد", grade: "P up to M" },
+            { name: "سيف هشام مصطفى ياسين أحمد", grade: "P not up to M" },
+            { name: "شهد حسني عبد العزيز جاد الله", grade: "NA" },
+            { name: "شهد خالد أحمد عبد الموجود", grade: "NA" },
+            { name: "شهد خالد سعيد فرحات", grade: "P up to M" },
+            { name: "شهد علاء الدين طه رزق أحمد", grade: "P up to M" },
+            { name: "شهد محمد محمود محمد محمود حسن", grade: "NA" },
+            { name: "شهد محمود عمار محمد محمد", grade: "P up to M" },
+            { name: "شيماء شاذلي علي محمد", grade: "P up to M" },
+            { name: "شيماء مصطفى محمد عبد الحفيظ", grade: "NA" },
+            { name: "صافي أيمن إمام السيد", grade: "NA" },
+            { name: "ضحى علي إبراهيم عبد العزيز حسان", grade: "P up to M" },
+            { name: "ضحى خالد عبد الغني أمين", grade: "P up to M" },
+            { name: "طارق نشأت عبد المغني السيد بدر", grade: "P up to M" },
+            { name: "طه عاطف مسلم عبد الظاهر", grade: "NA" },
+            { name: "عادل أشرف أنور عبد العزيز", grade: "P not up to M" },
+            { name: "عبد الحميد خالد حسب الله محمد الحنبل", grade: "P up to M" },
+            { name: "عبد الرحمن أحمد إبراهيم محمد دياب", grade: "P not up to M" },
+            { name: "عبد الرحمن أحمد عباس سيد مرسي", grade: "P up to M" },
+            { name: "عبد الرحمن أحمد عبد الله عبد الله السيد", grade: "P not up to M" },
+            { name: "عبد الرحمن إيهاب محمود أحمد", grade: "P not up to M" },
+            { name: "عبد الرحمن حسن فوزي أحمد", grade: "P up to M" },
+            { name: "عبد الرحمن شريف عثمان علي حلمي عثمان", grade: "P up to M" },
+            { name: "عبد الرحمن طه عبد العواض رزق محمد", grade: "NA" },
+            { name: "عبد الرحمن فريد شولي حسن سليمان", grade: "P up to M" },
+            { name: "عبد الرحمن محمود عبد النبي محمود", grade: "P up to M" },
+            { name: "عبد الرحمن مصطفى النوبي حسان", grade: "P up to M" },
+            { name: "عبد الرحمن مصطفى صالح جاد", grade: "NA" },
+            { name: "عبد الرحمن معتز صلاح الدين محمد محمود", grade: "P up to M" },
+            { name: "عبد الرحمن عصام الدين محمد", grade: "P up to M" },
+            { name: "عبد العزيز حاتم يوسف أبو بكر يوسف", grade: "P up to M" },
+            { name: "عبد الله أحمد علي حسنين مصطفى", grade: "P not up to M" },
+            { name: "عبد الله السيد فوزي السيد", grade: "P not up to M" },
+            { name: "عبد الله حمادة عبد الله حسن", grade: "NA" },
+            { name: "عبد الله طه عبد المولى أحمد عبد الوهاب", grade: "P not up to M" },
+            { name: "عبد الله عرفات أحمد محمد سعيد", grade: "NA" },
+            { name: "عبد الجليل سعيد عبد الجليل محمد شمخ حسين", grade: "P not up to M" },
+            { name: "عبد الرحمن أحمد عبد الستار عبد الرحمن", grade: "P up to M" },
+            { name: "عبد الرحمن أحمد علي عبد الوارث", grade: "P not up to M" },
+            { name: "عبد الرحمن عادل سيد", grade: "P up to M" },
+            { name: "عبد الرحمن علي عبد الحميد علي عبد المنعم", grade: "P up to M" },
+            { name: "عبد الرحمن عماد عبد الفتاح عبد الرحمن", grade: "P up to M" },
+            { name: "عبد الرحمن محمد الأنور محمد", grade: "P up to M" },
+            { name: "عبد الرحمن محمود كامل ياسين", grade: "NA" },
+            { name: "عبد الفتاح أشرف عبد الفتاح حسن أحمد", grade: "P up to M" },
+            { name: "عبد الله أشرف الصباحي محمد السيد", grade: "NA" },
+            { name: "عبد الله محمد عبد الله أمين", grade: "NA" },
+            { name: "عبد الله علي إسماعيل عبد الله", grade: "NA" },
+            { name: "عبد الله محمد جمعة السيد", grade: "NA" },
+            { name: "عبير كرم أحمد محمد عبد الرحمن", grade: "NA" },
+            { name: "علي أشرف محمد فتحي عبد الحميد", grade: "NA" },
+            { name: "علي خالد محمد فاروق السعدني", grade: "P up to M" },
+            { name: "علي محمد عفيفي عرابي", grade: "P up to M" },
+            { name: "علي محمد عبد الحميد أحمد", grade: "P not up to M" },
+            { name: "عمر أحمد سيد أحمد", grade: "P up to M" },
+            { name: "علي محمد علي خليل", grade: "P up to M" },
+            { name: "عمر أحمد جلال الطيب", grade: "P up to M" },
+            { name: "عمر أحمد حفناوي المندوه أحمد أبو زيد", grade: "P up to M" },
+            { name: "عمر إيهاب كمال أحمد", grade: "P up to M" },
+            { name: "عمر لدري دهب سليمان عبد المجيد", grade: "P up to M" },
+            { name: "عمر محمد علي حامد الحنفي", grade: "P up to M" },
+            { name: "عمر محمود أحمد محمود يوسف", grade: "P not up to M" },
+            { name: "عمر ياسر محمد إبراهيم خضر", grade: "P up to M" },
+            { name: "عمر ياسين حسين إبراهيم", grade: "P up to M" },
+            { name: "عمر شامي السيد الشامي", grade: "P up to M" },
+            { name: "عمر محمود عبد الله محمد صفوت", grade: "P up to M" },
+            { name: "عمرو أيمن سعيد أحمد عطية", grade: "P up to M" },
+            { name: "عمرو خالد طه محمود", grade: "NA" },
+            { name: "عمرو خالد محمد علي أحمد", grade: "P not up to M" },
+            { name: "عمرو سعيد محمد عبد الحميد إمام", grade: "NA" },
+            { name: "عمرو عرفة عبد الرحمن رضوان عبد الرحمن", grade: "P up to M" },
+            { name: "فرح محمود لاسم درويش عبد العال", grade: "P up to M" },
+            { name: "فاطمة الزهراء السيد محمود مصلحي", grade: "NA" },
+            { name: "فاطمة حسنين أحمد حسنين", grade: "P up to M" },
+            { name: "فاطمة أشرف السيد عبد الله", grade: "P up to M" },
+            { name: "فاطمة وحيد عبد التواب محمد", grade: "P up to M" },
+            { name: "فيروز محمد إبراهيم محمد أحمد", grade: "NA" },
+            { name: "كريم أحمد عبد المعطي أحمد عبد المعطي", grade: "NA" },
+            { name: "كريم فادي عبد الله", grade: "P not up to M" },
+            { name: "كريم أحمد فؤاد أحمد", grade: "P not up to M" },
+            { name: "كوثر ناصر محمد خليل خضر", grade: "P up to M" },
+            { name: "ليديا إكرامي عياد إسكندر هنيدي", grade: "P up to M" },
+            { name: "ليديا سامي بسيوني خليل إبراهيم", grade: "NA" },
+            { name: "ليلى أحمد جمعة عبد الصادق", grade: "P up to M" },
+            { name: "ماجد عبده عبده عبد العال شطا", grade: "NA" },
+            { name: "مازن محمد رشاد محمد أحمد", grade: "P not up to M" },
+            { name: "مازن أسامة محمد غزاوي", grade: "P up to M" },
+            { name: "مازن مصطفى محمد مرزوق", grade: "P up to M" },
+            { name: "مجدي حمدي السيد بيومي", grade: "NA" },
+            { name: "محمد أحمد السيد عبد الله الشوربجي", grade: "P up to M" },
+            { name: "محمد أحمد الشافعي محمد", grade: "NA" },
+            { name: "محمد أحمد محمد أحمد سيد أحمد", grade: "NA" },
+            { name: "محمد أحمد سعيد البكري محمد", grade: "P up to M" },
+            { name: "محمد أشرف محمد محمد مرسي", grade: "NA" },
+            { name: "محمد الشحات مندور أحمد مندور", grade: "P up to M" },
+            { name: "محمد جمال عبد المعبود قطب", grade: "NA" },
+            { name: "محمد حسام زكي محمد نور شبانة", grade: "NA" },
+            { name: "محمد حيدر عبد الرحمن حسن", grade: "NA" },
+            { name: "محمد خالد محمد عبد العزيز", grade: "P up to M" },
+            { name: "محمد سامح محمد سيد حسين", grade: "P up to M" },
+            { name: "محمد سيد حسن عبد العظيم فرغلي", grade: "P up to M" },
+            { name: "محمد شعبان سلطان محمد", grade: "P up to M" },
+            { name: "محمد صالح عيد عودة", grade: "P not up to M" },
+            { name: "محمد عادل محمد إمام", grade: "P up to M" },
+            { name: "محمد عماد محمد محمد", grade: "NA" },
+            { name: "محمد عصام محمود صابر", grade: "NA" },
+            { name: "محمد علاء عبد الحميد محمد بكساوي", grade: "P up to M" },
+            { name: "محمد علاء فوزي الجميل أبو المعاطي", grade: "NA" },
+            { name: "محمد علي عبد الستار عبد الحميد حسن", grade: "P not up to M" },
+            { name: "محمد فتحي حسين محمد", grade: "NA" },
+            { name: "محمد محسن رمضان مرسي طلبة", grade: "P not up to M" },
+            { name: "محمد محمد سليمان إبراهيم بنداري", grade: "NA" },
+            { name: "محمد محمد عبد العزيز عبد الحافظ علي", grade: "P up to M" },
+            { name: "محمد مصطفى شحاتة عبد القادر", grade: "NA" },
+            { name: "محمد مصطفى محمد محمود", grade: "NA" },
+            { name: "محمد ناجح السيد أحمد", grade: "NA" },
+            { name: "محمد نعيم خميس محمد نعيم", grade: "P not up to M" },
+            { name: "محمد هرمس سعيد ريهان", grade: "P up to M" },
+            { name: "محمد هشام محمد إبراهيم عرنوس", grade: "P up to M" },
+            { name: "محمد وائل محمد عمر محمد", grade: "P up to M" },
+            { name: "محمد وليد محمد النبوي مغاوري محمد المتيني", grade: "P up to M" },
+            { name: "محمد ياسر محب إبراهيم", grade: "NA" },
+            { name: "محمود بكر عبد البديع", grade: "NA" },
+            { name: "محمود إبراهيم محمد أحمد", grade: "NA" },
+            { name: "محمود سعد خليل عطية صومع", grade: "P up to M" },
+            { name: "محمود عبد القادر محمود نادي", grade: "P up to M" },
+            { name: "محمود محمد عبد العزيز علي", grade: "P up to M" },
+            { name: "محمود مصطفى أبو الوفا محمد", grade: "P not up to M" },
+            { name: "محمود ناجي سعيد السيد مسلم", grade: "P up to M" },
+            { name: "محمود وائل محمود علي محمود", grade: "NA" },
+            { name: "مروان محمد عجمي محمد", grade: "P up to M" },
+            { name: "مروان مصطفى رمضان مصطفى", grade: "P up to M" },
+            { name: "مروة أحمد محمد حلمي حسن حبيب", grade: "P not up to M" },
+            { name: "مروة أيمن عاطف زين الدين", grade: "NA" },
+            { name: "مريم إسلام عبد الهادي محمد سعد الدين", grade: "P not up to M" },
+            { name: "مريم صلاح منصف محمد مرسال", grade: "NA" },
+            { name: "مريم عمرو حسن عبد الباسط", grade: "NA" },
+            { name: "مريم محمد سليمان عبد الظاهر", grade: "P up to M" },
+            { name: "مريم محمد سليمان عواد", grade: "P up to M" },
+            { name: "مريم محمد فوزي ثابت أحمد", grade: "P up to M" },
+            { name: "مريم محمد يوسف محمود", grade: "P up to M" },
+            { name: "مريم محمود فتح الله عبد السلام", grade: "P not up to M" },
+            { name: "مريم محمود بدوي", grade: "P up to M" },
+            { name: "مريم هاني نصحي إبراهيم يونان", grade: "P up to M" },
+            { name: "مصطفى أحمد محمد سعد أبو دله", grade: "P up to M" },
+            { name: "مصطفى علي محمود محمد حافظ", grade: "P up to M" },
+            { name: "مصطفى محمد مصطفى السيد عوض الله", grade: "P up to M" },
+            { name: "مصطفى هاني حسن الأنور عبد المنعم", grade: "NA" },
+            { name: "مصطفى أحمد إبراهيم سالم", grade: "NA" },
+            { name: "مصطفى خالد نصر عبد الله جاب الله", grade: "P up to M" },
+            { name: "مصطفى ماهر عبد البديع سلامة سلامة", grade: "P up to M" },
+            { name: "معاذ أحمد غريب عبد اللطيف محمود", grade: "P up to M" },
+            { name: "معتز محمد عبد العظيم عباس", grade: "NA" },
+            { name: "ملك أحمد ضاحي طه", grade: "P up to M" },
+            { name: "ملك حامد محمد حسين", grade: "P up to M" },
+            { name: "ملك صبحي عبد المعبود علي", grade: "NA" },
+            { name: "ملك عمرو صابر زكي", grade: "NA" },
+            { name: "ملك وليد محمد عبد المعز مهني", grade: "NA" },
+            { name: "ممدوح وائل ممدوح علي محمد", grade: "P up to M" },
+            { name: "منه الله سعيد عبد الفتاح محمود", grade: "NA" },
+            { name: "منه الله علي محمد محمد", grade: "NA" },
+            { name: "منه الله أحمد عبد الفتاح محمد", grade: "P up to M" },
+            { name: "منه الله عصام عبد الله مسعد", grade: "P not up to M" },
+            { name: "منه الله محمد حسن شعراوي", grade: "NA" },
+            { name: "منه الله هاني محمد حسان", grade: "NA" },
+            { name: "منه رمضان سعد محمد السيد", grade: "P up to M" },
+            { name: "منه عباس حسين عباس حسن", grade: "NA" },
+            { name: "منه عبد العزيز محمد شفيق", grade: "NA" },
+            { name: "منه غريب محمود محمد علي", grade: "P up to M" },
+            { name: "منه الله صابر عبد العاطي بشاري", grade: "P up to M" },
+            { name: "منى السيد فارس النجار", grade: "P up to M" },
+            { name: "منى محمد صالح محمد", grade: "P not up to M" },
+            { name: "مؤمن جمال ربيع عبد البالي", grade: "NA" },
+            { name: "مي السيد سعد أنصاري أبو الحسن", grade: "NA" },
+            { name: "ميادة خالد محمود عبد اللطيف عبد الرازق", grade: "P up to M" },
+            { name: "ميرنا يحيى سعد بشير", grade: "P up to M" },
+            { name: "ميسرة محمد عبد العزيز العزب شلبي", grade: "NA" },
+            { name: "مينا إسحاق رمزي مختار", grade: "NA" },
+            { name: "مينا سميح رؤوف كمال", grade: "P not up to M" },
+            { name: "مينا ضياء سيف وهبي مسعد", grade: "P up to M" },
+            { name: "نادر محمد علي أحمد", grade: "NA" },
+            { name: "ندا السيد عبد المنصف عبد السلام السيد", grade: "NA" },
+            { name: "ندى أحمد سعيد أحمد محمد", grade: "P up to M" },
+            { name: "ندى سامي محمد مرسي", grade: "NA" },
+            { name: "ندى عصام محمد عبد ربه", grade: "NA" },
+            { name: "ندى محمود محمد حسن", grade: "P not up to M" },
+            { name: "نرمين أحمد حمدي عبد العزيز سنبل", grade: "P not up to M" },
+            { name: "نهال محمود محمد عطية", grade: "P up to M" },
+            { name: "نور أحمد الماظ أمين", grade: "NA" }
+        ];
+
+        const searchInput = document.getElementById('searchInput');
+        const resultsDiv = document.getElementById('results');
+        const countDiv = document.getElementById('count');
+        const filterBtns = document.querySelectorAll('.filter-btn');
+
+        function getGradeClass(grade) {
+            if (grade === "NA") return "fail";
+            if (grade === "P not up to M") return "pass";
+            if (grade === "P up to M") return "pass-p-up-to-m";
+            return "fail";
+        }
+
+        function getGradeText(grade) {
+            if (grade === "NA") return "مش ناجح";
+            if (grade === "P not up to M") return "ناجح 60%";
+            if (grade === "P up to M") return "ناجح ويرتفع لتصحيح المستوى M";
+        }
+
+        function highlightText(text, searchTerm) {
+            if (!searchTerm) return text;
+            const regex = new RegExp(`(${searchTerm})`, 'gi');
+            return text.replace(regex, '<span class="highlight">$1</span>');
+        }
+
+        function displayResults(filteredStudents) {
+            resultsDiv.innerHTML = '';
+            
+            if (filteredStudents.length === 0) {
+                resultsDiv.innerHTML = '<div class="result">لا توجد نتائج مطابقة للبحث</div>';
+                return;
+            }
+
+            filteredStudents.forEach(student => {
+                const div = document.createElement('div');
+                div.className = 'result';
+                div.innerHTML = `
+                    <span>${highlightText(student.name, searchInput.value)}</span>
+                    <span class="grade ${getGradeClass(student.grade)}">${getGradeText(student.grade)}</span>
+                `;
+                resultsDiv.appendChild(div);
+            });
+
+            countDiv.textContent = `عدد النتائج: ${filteredStudents.length}`;
+        }
+
+        function filterStudents() {
+            const searchTerm = searchInput.value.trim();
+            const activeFilter = document.querySelector('.filter-btn.active').dataset.filter;
+
+            let filtered = students;
+
+            if (searchTerm) {
+                filtered = filtered.filter(student => 
+                    student.name.toLowerCase().includes(searchTerm.toLowerCase())
+                );
+            }
+
+            if (activeFilter !== 'all') {
+                filtered = filtered.filter(student => {
+                    if (activeFilter === 'pass') return student.grade === "P not up to M";
+                    if (activeFilter === 'conditional') return student.grade === "P up to M";
+                    return student.grade === "NA";
+                });
+            }
+
+            displayResults(filtered);
+        }
+
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                filterBtns.forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                filterStudents();
+            });
+        });
+
+        searchInput.addEventListener('input', filterStudents);
+
+        // Initial display
+        filterStudents();
+    </script>
+</body>
+</html>
